@@ -9,69 +9,11 @@ export default class Card extends React.Component {
             opened: false,
             liked: false,
         };
-        const check = JSON.parse(localStorage.getItem('liked'));
-        if(!check)
-        {
-            const arr = [];
-            localStorage.setItem('liked', JSON.stringify(arr));
-        }
-        else
-        {
-            localStorage.setItem('liked', JSON.stringify(check));
-        }
-        console.log(JSON.parse(localStorage.getItem('liked')));
     }
 
-    componentWillMount()
+    checkLike = (likedList, id) =>
     {
-        this.setState({
-            liked: this.props.movie.liked,
-        })
-    }
-
-    componentWillUpdate()
-    {
-        const arr = JSON.parse(localStorage.getItem('liked'));
-        const index = this.findWithAttr(arr, 'id', this.props.movie.id)
-        {
-            if(index != -1)
-            {
-                console.log(index);
-            }
-        }
-    }
-
-    findWithAttr(array, attr, value) {
-        for(let i = 0; i < array.length; i += 1) {
-            if(array[i][attr] === value) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    toggleLiked = () => {
-        const {liked} = this.state;
-        if(this.props.movie.liked)
-        {
-            this.setState({
-                liked: false
-            })
-            const arr = JSON.parse(localStorage.getItem('liked'));
-            const index = this.findWithAttr(arr, 'id', this.props.movie.id);
-            if (index > -1) {
-                arr.splice(index, 1);
-            }
-            localStorage.setItem('liked', JSON.stringify(arr));
-        }
-        else{
-            this.setState({
-                liked: true
-            })
-            const arr = JSON.parse(localStorage.getItem('liked'));
-            arr.push(this.props.movie);
-            localStorage.setItem('liked', JSON.stringify(arr));
-        }
+        return(likedList.includes(id));
     };
 
     toggleSummary = () => {
@@ -84,6 +26,9 @@ export default class Card extends React.Component {
 
     render() {
         const {
+            likedList,
+            onAddLike,
+            onUnlike,
             movie: {
                 id,
                 backdrop_path,
@@ -95,9 +40,6 @@ export default class Card extends React.Component {
             },
         } = this.props;
         const {opened} = this.state;
-        const arr = JSON.parse(localStorage.getItem('liked'));
-        const index = this.findWithAttr(arr, 'id', this.props.movie.id);
-
 
         return (
             <div className="card">
@@ -110,8 +52,8 @@ export default class Card extends React.Component {
                     {original_title}
                 </div>
 
-                <div className="card__like">
-                    <i className={index > -1 ? 'fa fa-heart' : 'fa fa-heart-o'} onClick={() => {this.toggleLiked()}} />
+                <div className="card__like" onClick={this.checkLike(likedList, id) ? onUnlike : onAddLike} >
+                    <i className={this.checkLike(likedList, id) ? 'fa fa-heart' : 'fa fa-heart-o'} />
                 </div>
 
                 <div className="card__subtitle">

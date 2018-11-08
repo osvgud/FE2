@@ -16,10 +16,8 @@ export default class App extends React.Component {
                 name: 'none'},
             likedList: [],
         };
-        this.handler = this.handler.bind(this);
         this.requestMovies();
         this.requestGenres();
-        this.handleClick = this.handleClick.bind(this);
     }
 
     handler = (id, name) => {
@@ -36,25 +34,22 @@ export default class App extends React.Component {
             .catch((error) => console.log(error));
     };
 
-    likesHandler = (newid) => {
-        const {likedList} = this.state;
-        const arr = likedList;
-        if(likedList.includes(newid))
-        {
-            arr.splice(newid, 1);
-            this.setState({
-                likedList: arr,
-            })
-        }
-        else {
-            arr.push(newid);
-            this.setState({
-                likedList: arr,
-            })
-        }
+    addLike = (id) =>
+    {
+        const { likedList } = this.state;
+        likedList.push(id);
+        this.setState({
+            likedList,
+        })
+    };
 
-        console.log(likedList);
-    }
+    unLike = (id) => {
+        const { likedList } = this.state;
+
+        this.setState({
+            likedList: likedList.filter((currentId) => currentId !== id),
+        })
+    };
 
     requestMovies = () => {
         axios
@@ -83,26 +78,23 @@ export default class App extends React.Component {
         this.setState({
             genreList,
         })
-    }
-
-    handleClick = () => {
-        console.log('Paspausta');
-    }
-
+    };
     render() {
         const {movieList, genreList, activeGenre, likedList} = this.state;
 
         return (
             <div>
-                <div className="cards">
-                    {likedList.map((like) => <p>{like}-</p>)}
-                </div>
                 <h1>Active Genre: {activeGenre.name}</h1>
                 <div className="cards">
                     {genreList.map((genre) => <Genre genre={genre} action={this.handler}/>)}
                 </div>
                 <div className="cards">
-                    {movieList.map((movie) => <Card movie={movie} likedlist={likedList} action={this.likesHandler}/>)}
+                    {movieList.map((movie) =>
+                        <Card
+                            movie={movie}
+                            likedList={likedList}
+                            onAddLike={() => this.addLike(movie.id)}
+                            onUnlike={() => this.unLike(movie.id)}/>)}
                 </div>
             </div>
         );
