@@ -1,102 +1,65 @@
 import React from 'react';
-import axios from 'axios';
 import Card from './Card';
-import {endpoints} from '../../config';
+import { connect } from 'react-redux';
 import Genre from "./Genre";
+import { getMovies, getGenres, getActiveGenre, addLike, unLike, addLog } from '../thunks';
 
-export default class App extends React.Component {
-    constructor() {
-        super();
-
-        this.state = {
-            movieList: [],
-            genreList: [],
-            activeGenre: {
-                id: -1,
-                name: 'none'},
-            likedList: [],
-        };
-        this.requestMovies();
-        this.requestGenres();
+class App extends React.Component {
+    constructor(props) {
+        super(props);
+        props.onGetGenres();
+        props.onGetMovies();
     }
 
-    handler = (id, name) => {
-        this.setState({
-            activeGenre: {
-                id,
-                name,
-            },
-        });
-
-        axios
-            .get(endpoints.genreMovies(id))
-            .then((res) => this.setMovieList(res.data.results))
-            .catch((error) => console.log(error));
-    };
-
-    addLike = (id) =>
-    {
-        const { likedList } = this.state;
-        likedList.push(id);
-        this.setState({
-            likedList,
-        })
-    };
-
-    unLike = (id) => {
-        const { likedList } = this.state;
-
-        this.setState({
-            likedList: likedList.filter((currentId) => currentId !== id),
-        })
-    };
-
-    requestMovies = () => {
-        axios
-            .get(endpoints.mostPopularMovies())
-            .then((res) => this.setMovieList(res.data.results))
-            .catch((error) => console.log(error));
-    };
-
-    requestGenres = () => {
-        axios
-            .get(endpoints.genres())
-            .then((res) => this.setGenreList(res.data.genres))
-            .catch((error) => console.log(error));
+    componentDidMount() {
+        const { logsList, onAddLog } = this.props;
+        onAddLog('Aplikacija uzkrauta', logsList);
     }
 
-    setMovieList = (movieList) => {
-        movieList.forEach(function(el){
-            el.liked = false;
-        });
-        this.setState({
-            movieList,
-        })
-    };
 
-    setGenreList = (genreList) => {
-        this.setState({
-            genreList,
-        })
-    };
     render() {
-        const {movieList, genreList, activeGenre, likedList} = this.state;
+        const { movieList, genreList, likedList, logsList } = this.props;
 
         return (
-            <div>
-                <h1>Active Genre: {activeGenre.name}</h1>
+            <React.Fragment>
                 <div className="cards">
-                    {genreList.map((genre) => <Genre genre={genre} action={this.handler}/>)}
+                    {genreList.map((genre) => <Genre genre={genre} action={() => this.props.onGetActiveGenre(genre, logsList)}/>)}
                 </div>
                 <div className="cards">
-                    {movieList.map((movie) =>
+                    {movieList.map((movie) => (
                         <Card
                             movie={movie}
                             likedList={likedList}
-                            onAddLike={() => this.addLike(movie.id)}
-                            onUnlike={() => this.unLike(movie.id)}/>)}
+                            onAddLike={() => this.props.onAddLike(movie, likedList, logsList)}
+                            onUnlike={() => this.props.onUnLike(movie, likedList, logsList)}
+                        />
+                    ))}
                 </div>
-            </div>
+            </React.Fragment>
         );
     }
 }
+
+export default connect(
+    // function to get data from redux store to this components props
+    (state) => {
+        return {
+            movieList: state.movies.list,
+            genreList: state.genres.list,
+            likedList: state.likes.list,
+            logsList: state.logs.list,
+        };
+    },
+    // function to pass action callers to this components props
+    (dispatch) => {
+        return {
+            // onSetMovies - simplest way to pass data to store
+            onGetMovies: () => dispatch(getMovies()),
+            onGetGenres: () => dispatch(getGenres()),
+            onGetActiveGenre: (genre, logsList) => dispatch(getActiveGenre(genre, logsList)),
+            onAddLike: (movie, likedList, logsList) => dispatch(addLike(movie, likedList, logsList)),
+            onUnLike: (movie, likedList, logsList) => dispatch(unLike(movie, likedList, logsList)),
+            onAddLog: (logText, logsList) => dispatch(addLog(logText, logsList)),
+        };
+    },
+)(App);

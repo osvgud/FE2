@@ -7,7 +7,6 @@ export default class Card extends React.Component {
 
         this.state = {
             opened: false,
-            liked: false,
         };
     }
 
